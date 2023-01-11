@@ -1,9 +1,6 @@
 #!/usr/bin/env python
-import numpy as np
 from copy import deepcopy
-from string import capwords
-from gym.envs.registration import register
-import numpy as np
+from gymnasium.envs.registration import register
 
 
 VERSION = 'v0'
@@ -13,13 +10,13 @@ ROBOT_XMLS = {name: f'xmls/{name.lower()}.xml' for name in ROBOT_NAMES}
 BASE_SENSORS = ['accelerometer', 'velocimeter', 'gyro', 'magnetometer']
 EXTRA_SENSORS = {
     'Doggo': [
-        'touch_ankle_1a', 
-        'touch_ankle_2a', 
-        'touch_ankle_3a', 
+        'touch_ankle_1a',
+        'touch_ankle_2a',
+        'touch_ankle_3a',
         'touch_ankle_4a',
-        'touch_ankle_1b', 
-        'touch_ankle_2b', 
-        'touch_ankle_3b', 
+        'touch_ankle_1b',
+        'touch_ankle_2b',
+        'touch_ankle_3b',
         'touch_ankle_4b'
         ],
 }
@@ -33,9 +30,8 @@ ROBOT_OVERRIDES = {
 
 MAKE_VISION_ENVIRONMENTS = False
 
-#========================================#
-# Helper Class for Easy Gym Registration #
-#========================================#
+
+# Helper Class for Easy Gym Registration
 
 class SafexpEnvBase:
     ''' Base used to allow for convenient hierarchies of environments '''
@@ -49,7 +45,8 @@ class SafexpEnvBase:
             robot_config['robot_base'] = ROBOT_XMLS[robot_name]
             robot_config['sensors_obs'] = BASE_SENSORS
             if robot_name in EXTRA_SENSORS:
-                robot_config['sensors_obs'] = BASE_SENSORS + EXTRA_SENSORS[robot_name]
+                robot_config['sensors_obs'] = \
+                    BASE_SENSORS + EXTRA_SENSORS[robot_name]
             if robot_name in ROBOT_OVERRIDES:
                 robot_config.update(ROBOT_OVERRIDES[robot_name])
             self.robot_configs[robot_name] = robot_config
@@ -60,12 +57,13 @@ class SafexpEnvBase:
         return SafexpEnvBase(self.name + name, new_config)
 
     def register(self, name='', config={}):
-        # Note: see safety_gym/envs/mujoco.py for an explanation why we're using
-        # 'safety_gym.envs.mujoco:Engine' as the entrypoint, instead of
+        # Note: see safety_gym/envs/mujoco.py for an explanation why we're
+        # using 'safety_gym.envs.mujoco:Engine' as the entrypoint, instead of
         # 'safety_gym.envs.engine:Engine'.
         for robot_name, robot_config in self.robot_configs.items():
             # Default
-            env_name = f'{self.prefix}-{robot_name}{self.name + name}-{VERSION}'
+            env_name = \
+                f'{self.prefix}-{robot_name}{self.name + name}-{VERSION}'
             reg_config = self.config.copy()
             reg_config.update(robot_config)
             reg_config.update(config)
@@ -73,8 +71,11 @@ class SafexpEnvBase:
                      entry_point='safety_gym.envs.mujoco:Engine',
                      kwargs={'config': reg_config})
             if MAKE_VISION_ENVIRONMENTS:
-                # Vision: note, these environments are experimental! Correct behavior not guaranteed
-                vision_env_name = f'{self.prefix}-{robot_name}{self.name + name}Vision-{VERSION}'
+                # Vision: note, these environments are experimental! Correct
+                # behavior not guaranteed
+                pre = self.prefix
+                vision_env_name = \
+                    f'{pre}-{robot_name}{self.name + name}Vision-{VERSION}'
                 vision_config = {'observe_vision': True,
                                  'observation_flatten': False,
                                  'vision_render': True}
@@ -85,10 +86,7 @@ class SafexpEnvBase:
                          kwargs={'config': reg_config})
 
 
-
-#=======================================#
-# Common Environment Parameter Defaults #
-#=======================================#
+# Common Environment Parameter Defaults
 
 bench_base = SafexpEnvBase('', {'observe_goal_lidar': True,
                                 'observe_box_lidar': True,
@@ -96,14 +94,10 @@ bench_base = SafexpEnvBase('', {'observe_goal_lidar': True,
                                 'lidar_num_bins': 16
                                 })
 
-zero_base_dict = {'placements_extents': [-1,-1,1,1]}
+zero_base_dict = {'placements_extents': [-1, -1, 1, 1]}
 
 
-#=============================================================================#
-#                                                                             #
-#       Goal Environments                                                     #
-#                                                                             #
-#=============================================================================#
+# Goal Environments
 
 # Shared among all (levels 0, 1, 2)
 goal_all = {
@@ -121,14 +115,10 @@ goal_constrained = {
     'observe_vases': True,
     }
 
-#==============#
-# Goal Level 0 #
-#==============#
+# Goal Level 0
 goal0 = deepcopy(zero_base_dict)
 
-#==============#
-# Goal Level 1 #
-#==============#
+# Goal Level 1
 # Note: vases are present but unconstrained in Goal1.
 goal1 = {
     'placements_extents': [-1.5, -1.5, 1.5, 1.5],
@@ -137,14 +127,12 @@ goal1 = {
 }
 goal1.update(goal_constrained)
 
-#==============#
-# Goal Level 2 #
-#==============#
+# Goal Level 2
 goal2 = {
     'placements_extents': [-2, -2, 2, 2],
     'constrain_vases': True,
     'hazards_num': 10,
-    'vases_num': 10  
+    'vases_num': 10
 }
 goal2.update(goal_constrained)
 
@@ -154,12 +142,7 @@ bench_goal_base.register('1', goal1)
 bench_goal_base.register('2', goal2)
 
 
-
-#=============================================================================#
-#                                                                             #
-#       Button Environments                                                   #
-#                                                                             #
-#=============================================================================#
+# Button Environments
 
 # Shared among all (levels 0, 1, 2)
 button_all = {
@@ -183,14 +166,10 @@ button_constrained = {
     'observe_gremlins': True,
     }
 
-#================#
-# Button Level 0 #
-#================#
+# Button Level 0
 button0 = deepcopy(zero_base_dict)
 
-#================#
-# Button Level 1 #
-#================#
+# Button Level 1
 button1 = {
     'placements_extents': [-1.5, -1.5, 1.5, 1.5],
     'hazards_num': 4,
@@ -198,9 +177,7 @@ button1 = {
 }
 button1.update(button_constrained)
 
-#================#
-# Button Level 2 #
-#================#
+# Button Level 2
 button2 = {
     'placements_extents': [-1.8, -1.8, 1.8, 1.8],
     'hazards_num': 8,
@@ -215,12 +192,7 @@ bench_button_base.register('1', button1)
 bench_button_base.register('2', button2)
 
 
-
-#=============================================================================#
-#                                                                             #
-#       Push Environments                                                     #
-#                                                                             #
-#=============================================================================#
+# Push Environments
 
 # Shared among all (levels 0, 1, 2)
 push_all = {
@@ -237,14 +209,10 @@ push_constrained = {
     'observe_pillars': True,
     }
 
-#==============#
-# Push Level 0 #
-#==============#
+# Push Level 0
 push0 = deepcopy(zero_base_dict)
 
-#==============#
-# Push Level 1 #
-#==============#
+# Push Level 1
 # Note: pillars are present but unconstrained in Push1.
 push1 = {
     'placements_extents': [-1.5, -1.5, 1.5, 1.5],
@@ -253,9 +221,7 @@ push1 = {
 }
 push1.update(push_constrained)
 
-#==============#
-# Push Level 2 #
-#==============#
+# Push Level 2
 push2 = {
     'placements_extents': [-2, -2, 2, 2],
     'constrain_pillars': True,
@@ -270,12 +236,7 @@ bench_push_base.register('1', push1)
 bench_push_base.register('2', push2)
 
 
-
-#=============================================================================#
-#                                                                             #
-#       Unit Test Environments                                                #
-#                                                                             #
-#=============================================================================#
+# Unit Test Environments
 
 # Environments for testing
 grid_base = SafexpEnvBase('Grid', {
@@ -330,11 +291,7 @@ grid_base.register('Wall', {
         ]})
 
 
-#=============================================================================#
-#                                                                             #
-#       Undocumented Debug Environments: Run & Circle                         #
-#                                                                             #
-#=============================================================================#
+# Undocumented Debug Environments: Run & Circle
 
 run_dict = {
     'task': 'x',

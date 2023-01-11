@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-import re
 import unittest
 import numpy as np
-import gym
-import gym.spaces
+import gymnasium as gym
 
 from safety_gym.envs.engine import Engine
 
@@ -22,13 +20,14 @@ class TestBench(unittest.TestCase):
             'robot_rot': 0,
             '_seed': 0,
         }
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
         goal_met = False
         for _ in range(999):
             act = np.zeros(env.action_space.shape)
             act[0] = 1
-            _, reward, done, info = env.step(act)
+            _, reward, terminated, truncated, info = env.step(act)
+            done = terminated or truncated
             self.assertFalse(done)
             # If we have not yet got the goal
             if not goal_met:
@@ -60,19 +59,20 @@ class TestBench(unittest.TestCase):
             'robot_rot': 0,
             '_seed': 0,
         }
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
         goal_met = False
         hazard_found = False
         for _ in range(999):
             act = np.zeros(env.action_space.shape)
             act[0] = 1
-            _, reward, done, info = env.step(act)
+            _, reward, _, _, info = env.step(act)
             if not hazard_found:
                 if info['cost']:
                     hazard_found = True
                     self.assertEqual(info['cost'], 1.0)  # Sparse costs
-                    self.assertGreater(info['cost_hazards'], 0.0)  # Nonzero hazard cost
+                    # Nonzero hazard cost
+                    self.assertGreater(info['cost_hazards'], 0.0)
             if 'goal_met' in info:
                 goal_met = info['goal_met']
             # env.render()  # Uncomment to visualize test
@@ -80,7 +80,9 @@ class TestBench(unittest.TestCase):
         self.assertTrue(goal_met)
 
     def test_vases(self):
-        ''' Point should run into and past a vase, pushing it out of the way '''
+        '''
+        Point should run into and past a vase, pushing it out of the way
+        '''
         config = {
             'robot_base': 'xmls/point.xml',
             'goal_size': 0.5,
@@ -98,24 +100,28 @@ class TestBench(unittest.TestCase):
             'robot_rot': 0,
             '_seed': 0,
         }
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
         goal_met = False
         vase_found = False
         for _ in range(999):
             act = np.zeros(env.action_space.shape)
             act[0] = 1
-            _, reward, done, info = env.step(act)
+            _, reward, _, _, info = env.step(act)
             if not vase_found:
                 if info['cost']:
                     vase_found = True
                     self.assertEqual(info['cost'], 1.0)  # Sparse costs
-                    self.assertGreater(info['cost_vases_contact'], 0.0)  # Nonzero vase cost
-                    self.assertGreater(info['cost_vases_velocity'], 0.0)  # Nonzero vase cost
+                    # Nonzero vase cost
+                    self.assertGreater(info['cost_vases_contact'], 0.0)
+                    # Nonzero vase cost
+                    self.assertGreater(info['cost_vases_velocity'], 0.0)
             else:
-                # We've already found the vase (and hit it), ensure displace cost
+                # We've already found the vase (and hit it), ensure displace
+                # cost
                 self.assertEqual(info['cost'], 1.0)  # Sparse costs
-                self.assertGreater(info['cost_vases_displace'], 0.0)  # Nonzero vase cost
+                # Nonzero vase cost
+                self.assertGreater(info['cost_vases_displace'], 0.0)
             if 'goal_met' in info:
                 goal_met = info['goal_met']
             # env.render()  # Uncomment to visualize test
@@ -123,11 +129,13 @@ class TestBench(unittest.TestCase):
         self.assertTrue(goal_met)
 
     def check_correct_lidar(self, env_name):
-        ''' Check that a benchmark env has the right lidar obs for the objects in scene '''
+        '''
+        Check that a benchmark env has the right lidar obs for the objects in
+        scene
+        '''
         env = gym.make(env_name)
         env.reset()
         physics = env.unwrapped
-        world = physics.world
         obs_space_dict = physics.obs_space_dict
         task = physics.task
         lidar_count = sum('lidar' in o.lower() for o in obs_space_dict.keys())
@@ -165,10 +173,10 @@ class TestBench(unittest.TestCase):
     def test_correct_lidar(self):
         ''' We should have lidar for every object in the env '''
         matched = []
-        for env_spec in gym.envs.registry.all():
-            #if re.match(r'Safexp-.*-v0', env_spec.id) is not None:
-            if 'Safexp' in env_spec.id and not('Vision' in env_spec.id):
-                matched.append(env_spec.id)
+        for env_spec in gym.envs.registry.keys():
+            # if re.match(r'Safexp-.*-v0', env_spec.id) is not None:
+            if 'Safexp' in env_spec and not('Vision' in env_spec):
+                matched.append(env_spec)
         assert matched, 'Failed to match any environments!'
         for env_name in matched:
             print(env_name)

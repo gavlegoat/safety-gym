@@ -1,25 +1,28 @@
 #!/usr/bin/env python
 
 import argparse
-import gym
+import gymnasium as gym
 import safety_gym  # noqa
 import numpy as np  # noqa
 
+
 def run_random(env_name):
     env = gym.make(env_name)
-    obs = env.reset()
+    obs, _ = env.reset()
     done = False
     ep_ret = 0
     ep_cost = 0
     while True:
         if done:
-            print('Episode Return: %.3f \t Episode Cost: %.3f'%(ep_ret, ep_cost))
+            print('Episode Return: %.3f \t Episode Cost: %.3f'
+                  % (ep_ret, ep_cost))
             ep_ret, ep_cost = 0, 0
-            obs = env.reset()
+            obs, _ = env.reset()
         assert env.observation_space.contains(obs)
         act = env.action_space.sample()
         assert env.action_space.contains(act)
-        obs, reward, done, info = env.step(act)
+        obs, reward, terminated, truncated, info = env.step(act)
+        done = terminated or truncated
         # print('reward', reward)
         ep_ret += reward
         ep_cost += info.get('cost', 0)

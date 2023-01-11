@@ -1,5 +1,15 @@
 **Status:** Archive (code is provided as-is, no updates expected)
 
+This fork of safety-gym is updated to work with gymnasium, the modern MuJoCo Python bindings, and more recent versions of other dependencies. It is tested with:
+
+- gymnasium-0.27.0
+- joblib-1.2.0
+- mujoco-2.3.1
+- numpy-1.23.5
+- xmltodict-0.13.0
+
+NOTE: In order to match newer gymnasium conventions, if you wish to pass a `config` argument to the `Engine` constructor, you should do it by keywoard (i.e., `Engine(config=config)`).
+
 # Safety Gym
 
 Tools for accelerating safe exploration research. 

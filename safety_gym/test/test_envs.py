@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
-import gym
+import gymnasium as gym
 import safety_gym.envs  # noqa
 
 
@@ -13,14 +13,15 @@ class TestEnvs(unittest.TestCase):
         env.reset()
         done = False
         while not done:
-            _, _, done, _ = env.step(env.action_space.sample())
+            _, _, terminated, truncated, _ = \
+                env.step(env.action_space.sample())
+            done = terminated or truncated
 
     def test_envs(self):
         ''' Run all the bench envs '''
-        for env_spec in gym.envs.registry.all():
-            if 'Safexp' in env_spec.id:
-                self.check_env(env_spec.id)
-
+        for env_spec in gym.envs.registry.keys():
+            if 'Safexp' in env_spec:
+                self.check_env(env_spec)
 
 
 if __name__ == '__main__':

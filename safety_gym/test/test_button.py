@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 import unittest
-import numpy as np
 
-from safety_gym.envs.engine import Engine, ResamplingError
+from safety_gym.envs.engine import Engine
 
 
 class TestButton(unittest.TestCase):
@@ -15,7 +14,8 @@ class TestButton(unittest.TestCase):
         got_goal = False
         done = False
         while not done:
-            _, _, done, info = env.step([1, 0])
+            _, _, terminated, truncated, info = env.step([1, 0])
+            done = terminated or truncated
             if 'goal_met' in info:
                 got_goal = True
         if gets_goal:
@@ -38,19 +38,19 @@ class TestButton(unittest.TestCase):
             '_seed': 0,
         }
         # Correct button is pressed, nothing afterwards
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
         info = self.rollout_env(env, gets_goal=True)
         self.assertEqual(info['cost_buttons'], 0.0)
         # Correct button is pressed, then times out and penalties
         config['buttons_resampling_delay'] = 10
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
         info = self.rollout_env(env, gets_goal=True)
         self.assertEqual(info['cost_buttons'], 1.0)
         # Wrong button is pressed, gets penalty
         config['_seed'] = 1
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
         info = self.rollout_env(env)
         self.assertEqual(info['cost_buttons'], 1.0)

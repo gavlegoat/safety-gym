@@ -11,7 +11,8 @@ class TestGoal(unittest.TestCase):
         ''' roll an environment until it is done '''
         done = False
         while not done:
-            _, _, done, _ = env.step([1,0])
+            _, _, terminated, truncated, _ = env.step([1, 0])
+            done = terminated or truncated
 
     def test_resample(self):
         ''' Episode should end with resampling failure '''
@@ -28,7 +29,7 @@ class TestGoal(unittest.TestCase):
             'terminate_resample_failure': True,
             '_seed': 0,
         }
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
         self.assertEqual(env.steps, 0)
         # Move the robot towards the goal
@@ -38,9 +39,10 @@ class TestGoal(unittest.TestCase):
 
         # Try again with the raise
         config['terminate_resample_failure'] = False
-        env = Engine(config)
+        env = Engine(config=config)
         env.reset()
-        # Move the robot towards the goal, which should cause resampling failure
+        # Move the robot towards the goal, which should cause resampling
+        # failure
         with self.assertRaises(ResamplingError):
             self.rollout_env(env)
 
