@@ -10,6 +10,8 @@ This fork of safety-gym is updated to work with gymnasium, the modern MuJoCo Pyt
 
 NOTE: In order to match newer gymnasium conventions, if you wish to pass a `config` argument to the `Engine` constructor, you should do it by keywoard (i.e., `Engine(config=config)`).
 
+NOTE: In this repository, the default for all environments is to use `continue_goal=False`, i.e., an episode ends once the first goal is met. This is to allow for better interoperation with model-based RL approaches, as the model would have no good way of learning a transition when resampling occurs during an episode.
+
 # Safety Gym
 
 Tools for accelerating safe exploration research. 

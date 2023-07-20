@@ -128,7 +128,7 @@ class Engine(gym.Env, gym.utils.EzPickle):
         'randomize_layout': True,
         # If true, rejection sample from valid environments
         'build_resample': True,
-        'continue_goal': True,  # If true, draw a new goal after achievement
+        'continue_goal': False,  # If true, draw a new goal after achievement
         # If true, end episode when resampling fails,
         # otherwise, raise a python exception.
         'terminate_resample_failure': True,
